@@ -2323,7 +2323,7 @@
         
         // Setze Menü-Hintergrund (lädt von GitHub)
         const menuScreen = document.getElementById('menuScreen');
-        menuScreen.style.backgroundImage = 'url(https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/main/img/Menu.png)';
+        menuScreen.style.backgroundImage = 'url(https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/refs/heads/main/img/Menu.png)';
         
         // ========== MENU & HIGHSCORE SYSTEM ==========
         
@@ -2712,95 +2712,106 @@
             window.open('level_editor.html', '_blank');
         }
         
-        function startGame() {
+        async function startGame() {
             hideMenu();
             resetGameStats();
             currentLevel = 1;
-            loadLevelByNumber(1);
             
-            // Initialisiere alle Anzeigen
-            levelDisplay.textContent = currentLevel;
-            diamondsDisplay.textContent = diamondsCollected;
-            totalDiamondsNeededDisplay.textContent = totalDiamonds;
-            totalCollectedDisplay.textContent = totalDiamondsCollectedAllTime;
-            distanceDisplay.textContent = '0';
-            
-            // Initialisiere Timer
-            timeRemaining = getTimeForLevel(currentLevel);
-            timerDisplay.textContent = timeRemaining;
-            lastTimerUpdate = performance.now();
-            timerRunning = true;
-            
-            // Initialisiere Spieler
-            player.lastMoveTime = performance.now();
+            // Warte bis Level geladen ist
+            await loadLevelByNumber(1);
         }
         
         function loadLevelByNumber(levelNum) {
-            currentLevel = levelNum;
-            const levelFile = `level_${String(levelNum).padStart(2, '0')}.json`;
-            
-            // Verschiedene URLs zum Ausprobieren
-            const urls = [
-                // GitHub Raw URL - KORREKT: /level/ (singular!)
-                `https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/main/level/${levelFile}`,
-                // Fallback: /levels/ (falls umbenannt)
-                `https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/main/levels/${levelFile}`,
-                // Direkt im Hauptverzeichnis
-                `https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/main/${levelFile}`,
-                // Lokale Dateien (für offline-Nutzung)
-                levelFile,
-                `level/${levelFile}`,
-                `levels/${levelFile}`
-            ];
-            
-            // Versuche alle URLs nacheinander
-            function tryNextUrl(index) {
-                if (index >= urls.length) {
-                    // Alle URLs fehlgeschlagen - biete manuellen Upload an
-                    if (customLevels.length > 0 && customLevels[levelNum - 1]) {
-                        console.log('Verwende gecachtes Level');
-                        loadLevel(levelNum);
-                    } else {
-                        console.error(`Level ${levelNum} nicht gefunden in:`, urls);
-                        
-                        // Frage ob Level manuell hochgeladen werden soll
-                        const upload = confirm(
-                            `❌ Level ${levelNum} konnte nicht automatisch geladen werden!\n\n` +
-                            `Möchtest du die Level-Dateien manuell hochladen?\n\n` +
-                            `(Klicke OK um alle Level auf einmal hochzuladen)`
-                        );
-                        
-                        if (upload) {
-                            loadLevelsManually();
+            return new Promise((resolve, reject) => {
+                currentLevel = levelNum;
+                const levelFile = `level_${String(levelNum).padStart(2, '0')}.json`;
+                
+                // Verschiedene URLs zum Ausprobieren
+                const urls = [
+                    // GitHub Raw URL - KORREKT mit refs/heads/main
+                    `https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/refs/heads/main/level/${levelFile}`,
+                    // Fallback: alte URL-Struktur
+                    `https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/main/level/${levelFile}`,
+                    // Fallback: /levels/ (falls umbenannt)
+                    `https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/refs/heads/main/levels/${levelFile}`,
+                    // Direkt im Hauptverzeichnis
+                    `https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/refs/heads/main/${levelFile}`,
+                    // Lokale Dateien (für offline-Nutzung)
+                    levelFile,
+                    `level/${levelFile}`,
+                    `levels/${levelFile}`
+                ];
+                
+                // Versuche alle URLs nacheinander
+                function tryNextUrl(index) {
+                    if (index >= urls.length) {
+                        // Alle URLs fehlgeschlagen - biete manuellen Upload an
+                        if (customLevels.length > 0 && customLevels[levelNum - 1]) {
+                            console.log('Verwende gecachtes Level');
+                            loadLevel(levelNum);
+                            resolve();
                         } else {
-                            showMenu();
+                            console.error(`Level ${levelNum} nicht gefunden in:`, urls);
+                            
+                            // Frage ob Level manuell hochgeladen werden soll
+                            const upload = confirm(
+                                `❌ Level ${levelNum} konnte nicht automatisch geladen werden!\n\n` +
+                                `Möchtest du die Level-Dateien manuell hochladen?\n\n` +
+                                `(Klicke OK um alle Level auf einmal hochzuladen)`
+                            );
+                            
+                            if (upload) {
+                                loadLevelsManually();
+                                resolve(); // Resolve trotzdem, damit UI nicht hängt
+                            } else {
+                                showMenu();
+                                reject('Level loading cancelled');
+                            }
                         }
+                        return;
                     }
-                    return;
+                    
+                    const url = urls[index];
+                    console.log(`Versuche Level ${levelNum} zu laden von: ${url}`);
+                    
+                    fetch(url)
+                        .then(response => {
+                            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                            return response.json();
+                        })
+                        .then(levelData => {
+                            console.log(`✅ Level ${levelNum} erfolgreich geladen von: ${url}`);
+                            customLevels[levelNum - 1] = levelData;
+                            usingCustomLevels = true;
+                            loadLevel(levelNum);
+                            
+                            // Initialisiere UI NACH dem Laden
+                            levelDisplay.textContent = currentLevel;
+                            diamondsDisplay.textContent = diamondsCollected;
+                            totalDiamondsNeededDisplay.textContent = totalDiamonds;
+                            totalCollectedDisplay.textContent = totalDiamondsCollectedAllTime;
+                            distanceDisplay.textContent = '0';
+                            
+                            // Initialisiere Timer
+                            timeRemaining = getTimeForLevel(currentLevel);
+                            timerDisplay.textContent = timeRemaining;
+                            lastTimerUpdate = performance.now();
+                            timerRunning = true;
+                            
+                            // Initialisiere Spieler
+                            player.lastMoveTime = performance.now();
+                            
+                            resolve();
+                        })
+                        .catch(error => {
+                            console.log(`❌ Fehlgeschlagen (${url}):`, error.message);
+                            // Nächste URL versuchen
+                            tryNextUrl(index + 1);
+                        });
                 }
                 
-                const url = urls[index];
-                console.log(`Versuche Level ${levelNum} zu laden von: ${url}`);
-                
-                fetch(url)
-                    .then(response => {
-                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                        return response.json();
-                    })
-                    .then(levelData => {
-                        console.log(`✅ Level ${levelNum} erfolgreich geladen von: ${url}`);
-                        customLevels[levelNum - 1] = levelData;
-                        usingCustomLevels = true;
-                        loadLevel(levelNum);
-                    })
-                    .catch(error => {
-                        console.log(`❌ Fehlgeschlagen (${url}):`, error.message);
-                        // Nächste URL versuchen
-                        tryNextUrl(index + 1);
-                    });
-            }
-            
-            tryNextUrl(0);
+                tryNextUrl(0);
+            });
         }
         
         function loadLevelsManually() {
