@@ -994,5 +994,6 @@
       }
     ],
     "monsters": []
-  }
+  },
+  "requiredDiamonds": 45
 }

@@ -8,7 +8,7 @@
   },
   "exit": {
     "x": 17,
-    "y": 16
+    "y": 17
   },
   "tiles": [
     [
@@ -381,29 +381,29 @@
       "earth",
       "earth",
       "earth",
-      "empty",
+      "earth",
       "wall",
       "wall"
     ],
     [
       "wall",
       "wall",
-      "wall",
-      "wall",
-      "wall",
-      "wall",
-      "wall",
-      "wall",
-      "wall",
-      "wall",
-      "wall",
-      "wall",
-      "wall",
-      "wall",
-      "wall",
-      "wall",
-      "wall",
-      "wall",
+      "earth",
+      "earth",
+      "earth",
+      "earth",
+      "earth",
+      "earth",
+      "earth",
+      "earth",
+      "earth",
+      "earth",
+      "earth",
+      "earth",
+      "earth",
+      "earth",
+      "earth",
+      "empty",
       "wall",
       "wall"
     ],
@@ -517,5 +517,6 @@
       }
     ],
     "monsters": []
-  }
+  },
+  "requiredDiamonds": 5
 }
