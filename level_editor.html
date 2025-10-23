@@ -258,7 +258,8 @@
                 <label>Diamanten zum Gewinnen:</label>
                 <input type="number" id="requiredDiamonds" value="5" min="0" max="999" onchange="updateRequiredDiamonds()">
                 <small style="color: #888; font-size: 10px; display: block; margin-top: 5px;">
-                    Anzahl Diamanten die gesammelt werden müssen
+                    Benötigt: <span id="requiredDisplay" style="color: #ffd700; font-weight: bold;">5</span> 
+                    | Im Level: <span id="diamondCountDisplay" style="color: #00d4ff; font-weight: bold;">0</span>
                 </small>
             </div>
             
@@ -594,10 +595,23 @@
         }
         
         function updateCounts() {
-            document.getElementById('diamondCount').textContent = levelData.objects.diamonds.length;
+            const diamondCount = levelData.objects.diamonds.length;
+            document.getElementById('diamondCount').textContent = diamondCount;
             document.getElementById('monsterCount').textContent = levelData.objects.monsters.length;
             document.getElementById('stoneCount').textContent = levelData.objects.stones.length;
             document.getElementById('requiredDisplay').textContent = levelData.requiredDiamonds;
+            
+            // Update auch die neue Anzeige
+            const diamondCountDisplay = document.getElementById('diamondCountDisplay');
+            if (diamondCountDisplay) {
+                diamondCountDisplay.textContent = diamondCount;
+                // Warnung wenn mehr benötigt als vorhanden
+                if (levelData.requiredDiamonds > diamondCount) {
+                    diamondCountDisplay.style.color = '#ff4444';
+                } else {
+                    diamondCountDisplay.style.color = '#00d4ff';
+                }
+            }
         }
         
         function updateRequiredDiamonds() {
@@ -638,8 +652,22 @@
         
         function saveLevel() {
             levelData.name = document.getElementById('levelName').value;
-            levelData.requiredDiamonds = parseInt(document.getElementById('requiredDiamonds').value);
+            const reqDiamonds = parseInt(document.getElementById('requiredDiamonds').value);
+            levelData.requiredDiamonds = isNaN(reqDiamonds) ? levelData.objects.diamonds.length : reqDiamonds;
+            
+            console.log('💾 Speichere Level:');
+            console.log('   Name:', levelData.name);
+            console.log('   requiredDiamonds:', levelData.requiredDiamonds);
+            console.log('   Diamanten im Level:', levelData.objects.diamonds.length);
+            
             const json = JSON.stringify(levelData, null, 2);
+            
+            // Prüfe ob requiredDiamonds im JSON ist
+            if (!json.includes('requiredDiamonds')) {
+                console.error('❌ requiredDiamonds fehlt im JSON!');
+                alert('FEHLER: requiredDiamonds wurde nicht gespeichert!');
+                return;
+            }
             
             // Download als Datei
             const blob = new Blob([json], { type: 'application/json' });
@@ -650,7 +678,8 @@
             a.click();
             URL.revokeObjectURL(url);
             
-            alert('Level gespeichert!');
+            console.log('✅ Level gespeichert!');
+            alert(`Level gespeichert!\nBenötigte Diamanten: ${levelData.requiredDiamonds}`);
         }
         
         function loadLevel() {
@@ -689,7 +718,13 @@
         
         function exportJSON() {
             levelData.name = document.getElementById('levelName').value;
-            levelData.requiredDiamonds = parseInt(document.getElementById('requiredDiamonds').value);
+            const reqDiamonds = parseInt(document.getElementById('requiredDiamonds').value);
+            levelData.requiredDiamonds = isNaN(reqDiamonds) ? levelData.objects.diamonds.length : reqDiamonds;
+            
+            console.log('📤 Exportiere Level:');
+            console.log('   Name:', levelData.name);
+            console.log('   requiredDiamonds:', levelData.requiredDiamonds);
+            
             const json = JSON.stringify(levelData, null, 2);
             document.getElementById('exportText').value = json;
             document.getElementById('exportModal').classList.add('active');

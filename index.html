@@ -190,9 +190,9 @@
             width: 100%;
             height: 100%;
             display: grid;
-            grid-template-columns: 1fr 500px;
+            grid-template-columns: 1fr 1fr;  /* 50/50 Split */
             padding: 50px;
-            gap: 30px;
+            gap: 40px;
         }
         
         .menu-left {
@@ -247,10 +247,10 @@
         }
         
         .highscore-title {
-            font-size: 36px;
+            font-size: 42px;
             color: #ffd700;
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
             text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
         }
         
@@ -282,41 +282,58 @@
         
         .highscore-header {
             display: grid;
-            grid-template-columns: 40px 1fr 80px 70px 80px 90px;
-            gap: 10px;
+            grid-template-columns: 60px 200px 100px 100px 120px 120px;
+            gap: 20px;
             font-weight: bold;
             color: #ffd700;
             margin-bottom: 10px;
-            padding: 10px;
+            padding: 15px;
+            text-align: center;
         }
         
         .highscore-row {
             display: grid;
-            grid-template-columns: 40px 1fr 80px 70px 80px 90px;
-            gap: 10px;
+            grid-template-columns: 60px 200px 100px 100px 120px 120px;
+            gap: 20px;
             align-items: center;
+            padding: 10px 15px;
         }
         
         .rank {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
             color: #ffd700;
             text-align: center;
+            width: 60px;
         }
         
         .player-name {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             color: #fff;
+            width: 200px;
+            text-align: left;
+            padding-left: 8px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
         
         .score-value {
-            font-size: 16px;
+            font-size: 18px;
             color: #aaa;
             text-align: center;
+        }
+        
+        /* Highscore Header Spalten - müssen center-aligned sein */
+        .highscore-header > div {
+            text-align: center;
+        }
+        
+        /* Zweite Spalte (Spieler Name) im Header links ausrichten */
+        .highscore-header > div:nth-child(2) {
+            text-align: left;
+            padding-left: 8px;
         }
         
         .name-input-modal {
@@ -384,7 +401,7 @@
                 <h1 class="game-title">⛏️ TUNNEL GRABER ⛏️</h1>
                 <div class="menu-buttons">
                     <button class="menu-btn" onclick="startGame()">▶ Spiel Starten</button>
-                    <button class="menu-btn" onclick="openLevelEditor()">🎨 Level Editor</button>
+                    <button class="menu-btn" onclick="loadCustomLevelsFromMenu()">📂 Level Laden</button>
                 </div>
             </div>
             <div class="menu-right">
@@ -409,7 +426,7 @@
         <div class="name-input-content">
             <h2>🎉 NEUER HIGHSCORE! 🎉</h2>
             <p>Gib deinen Namen ein:</p>
-            <input type="text" id="playerNameInput" maxlength="20" placeholder="Dein Name" />
+            <input type="text" id="playerNameInput" maxlength="15" placeholder="Dein Name (max 15 Zeichen)" />
             <button class="completion-btn primary" onclick="saveHighscore()">💾 Speichern</button>
         </div>
     </div>
@@ -493,8 +510,8 @@
         canvas.height = window.innerHeight - 80;
         
         const GRID_SIZE = 80;
-        const WORLD_WIDTH = 50;
-        const WORLD_HEIGHT = 40;
+        let WORLD_WIDTH = 50;
+        let WORLD_HEIGHT = 40;
         
         let camera = {
             x: 0,
@@ -516,8 +533,16 @@
         let totalDiamonds = 0;
         let totalDiamondsCollectedAllTime = 0;
         let currentLevel = 1;
-        let maxLevel = 3; // Anzahl verfügbarer Level (level_01.json bis level_03.json)
-        let customLevels = []; // Hier werden die geladenen Level gespeichert
+        let maxLevel = 3; // 3 eingebettete Level verfügbar
+        // Hier werden die geladenen Level gespeichert - Level 1-3 sind bereits eingebettet!
+        let customLevels = [
+            // LEVEL 1 - Eingebettet (funktioniert IMMER)
+            {"name":"Level 1","width":20,"height":20,"playerStart":{"x":2,"y":2},"exit":{"x":17,"y":16},"tiles":[["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],["wall","wall","empty","earth","empty","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","empty","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","empty","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","empty","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","empty","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","empty","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","empty","empty","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","empty","empty","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","empty","empty","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","empty","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","empty","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","empty","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","empty","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"]],"objects":{"stones":[],"diamonds":[{"x":4,"y":2},{"x":6,"y":4},{"x":6,"y":5},{"x":8,"y":6},{"x":8,"y":7},{"x":8,"y":8},{"x":10,"y":9},{"x":11,"y":9},{"x":11,"y":10},{"x":10,"y":10},{"x":13,"y":11},{"x":13,"y":12},{"x":13,"y":13},{"x":13,"y":14},{"x":14,"y":11}],"monsters":[]},"requiredDiamonds":15}
+            // LEVEL 2 - Steine Challenge
+            ,{"name":"Level 2 - Steine","width":20,"height":20,"playerStart":{"x":2,"y":2},"exit":{"x":17,"y":16},"tiles":[["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],["wall","wall","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","earth","wall","wall"],["wall","wall","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","earth","wall","wall"],["wall","wall","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","empty","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"]],"objects":{"stones":[{"x":3,"y":2},{"x":4,"y":2},{"x":5,"y":2},{"x":6,"y":2},{"x":7,"y":2},{"x":8,"y":2},{"x":9,"y":2},{"x":10,"y":2},{"x":11,"y":2},{"x":12,"y":2},{"x":13,"y":2},{"x":14,"y":2},{"x":15,"y":2},{"x":14,"y":4},{"x":13,"y":4},{"x":12,"y":4},{"x":11,"y":4},{"x":10,"y":4},{"x":9,"y":4},{"x":8,"y":4},{"x":7,"y":4},{"x":6,"y":4},{"x":5,"y":4},{"x":4,"y":4},{"x":3,"y":4},{"x":15,"y":4},{"x":16,"y":4},{"x":17,"y":4},{"x":16,"y":2},{"x":3,"y":6},{"x":4,"y":6},{"x":5,"y":6},{"x":6,"y":6},{"x":7,"y":6},{"x":8,"y":6},{"x":9,"y":6},{"x":10,"y":6},{"x":11,"y":6},{"x":12,"y":6},{"x":13,"y":6},{"x":14,"y":6},{"x":15,"y":6},{"x":16,"y":6},{"x":17,"y":6},{"x":3,"y":8},{"x":4,"y":8},{"x":5,"y":8},{"x":6,"y":8},{"x":7,"y":8},{"x":8,"y":8},{"x":9,"y":8},{"x":10,"y":8},{"x":11,"y":8},{"x":12,"y":8},{"x":13,"y":8},{"x":14,"y":8},{"x":15,"y":8},{"x":16,"y":8},{"x":17,"y":8},{"x":3,"y":10},{"x":4,"y":10},{"x":5,"y":10},{"x":6,"y":10},{"x":7,"y":10},{"x":8,"y":10},{"x":9,"y":10},{"x":10,"y":10},{"x":11,"y":10},{"x":12,"y":10},{"x":13,"y":10},{"x":14,"y":10},{"x":15,"y":10},{"x":16,"y":10},{"x":17,"y":10},{"x":4,"y":12},{"x":3,"y":12},{"x":2,"y":12},{"x":5,"y":12},{"x":6,"y":12},{"x":7,"y":12},{"x":8,"y":12},{"x":9,"y":12},{"x":10,"y":12},{"x":11,"y":12},{"x":12,"y":12},{"x":13,"y":12},{"x":14,"y":12},{"x":15,"y":12},{"x":16,"y":12}],"diamonds":[{"x":16,"y":14},{"x":15,"y":14},{"x":14,"y":14},{"x":13,"y":14},{"x":12,"y":14},{"x":11,"y":14},{"x":10,"y":14},{"x":9,"y":14},{"x":8,"y":14},{"x":7,"y":14},{"x":6,"y":14},{"x":5,"y":14},{"x":4,"y":14},{"x":3,"y":14},{"x":2,"y":14},{"x":5,"y":15},{"x":6,"y":15},{"x":7,"y":15},{"x":8,"y":15},{"x":9,"y":15},{"x":10,"y":15},{"x":11,"y":15},{"x":12,"y":15},{"x":13,"y":15},{"x":14,"y":15},{"x":15,"y":15},{"x":16,"y":15},{"x":16,"y":16},{"x":15,"y":16},{"x":14,"y":16},{"x":13,"y":16},{"x":12,"y":16},{"x":11,"y":16},{"x":10,"y":16},{"x":9,"y":16},{"x":8,"y":16},{"x":7,"y":16},{"x":6,"y":16},{"x":5,"y":16},{"x":4,"y":16},{"x":4,"y":15},{"x":3,"y":15},{"x":2,"y":15},{"x":2,"y":16},{"x":3,"y":16}],"monsters":[]},"requiredDiamonds":45}
+            // LEVEL 3 - Monster Intro
+            ,{"name":"Level 3 - Monster","width":20,"height":20,"playerStart":{"x":2,"y":2},"exit":{"x":2,"y":12},"tiles":[["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],["wall","wall","empty","earth","earth","empty","earth","earth","earth","empty","earth","earth","earth","empty","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","empty","earth","earth","earth","empty","earth","earth","earth","empty","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","empty","earth","earth","earth","empty","earth","earth","earth","empty","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","empty","earth","earth","earth","empty","earth","earth","earth","empty","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","empty","earth","earth","earth","empty","earth","earth","earth","empty","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","earth","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","earth","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","earth","wall","wall"],["wall","wall","empty","earth","earth","earth","earth","earth","empty","empty","empty","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","earth","earth","earth","earth","earth","earth","empty","empty","empty","earth","earth","earth","earth","earth","earth","earth","wall","wall"],["wall","wall","empty","empty","empty","empty","earth","earth","empty","empty","empty","earth","earth","empty","empty","empty","empty","earth","wall","wall"],["wall","wall","empty","empty","empty","empty","earth","earth","earth","earth","earth","earth","earth","empty","empty","empty","empty","earth","wall","wall"],["wall","wall","empty","empty","empty","empty","earth","earth","earth","earth","earth","earth","earth","empty","empty","empty","empty","earth","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"]],"objects":{"stones":[{"x":5,"y":2},{"x":9,"y":2}],"diamonds":[{"x":13,"y":2},{"x":14,"y":16},{"x":14,"y":15},{"x":14,"y":14},{"x":13,"y":14},{"x":13,"y":15},{"x":13,"y":16},{"x":2,"y":14},{"x":3,"y":14},{"x":4,"y":14},{"x":4,"y":15},{"x":3,"y":15},{"x":2,"y":15},{"x":2,"y":16},{"x":3,"y":16},{"x":4,"y":16},{"x":8,"y":12},{"x":9,"y":12},{"x":10,"y":12},{"x":10,"y":13},{"x":9,"y":13},{"x":8,"y":13},{"x":8,"y":14},{"x":9,"y":14},{"x":10,"y":14},{"x":15,"y":14},{"x":15,"y":15},{"x":15,"y":16},{"x":5,"y":14},{"x":5,"y":15},{"x":5,"y":16},{"x":16,"y":14},{"x":16,"y":15},{"x":16,"y":16}],"monsters":[{"type":"diamond","x":5,"y":7},{"type":"tnt","x":9,"y":7},{"type":"diamond","x":13,"y":7}]},"requiredDiamonds":34}
+        ];
         let usingCustomLevels = true; // Startet jetzt immer mit Level-Dateien
         let gameCompleted = false;
         let finalStats = {
@@ -553,6 +578,7 @@
         let moveDelay = 100;
         let gameOver = false;
         let gameOverReason = '';
+        let highscoreChecked = false;  // Track ob Highscore bereits geprüft wurde
         let backgroundCanvas = null;
         const wallColors = ['#4a4a4a', '#5a5a5a', '#6a6a6a', '#555555', '#505050'];
         
@@ -569,6 +595,10 @@
             backgroundCanvas.width = WORLD_WIDTH * GRID_SIZE;
             backgroundCanvas.height = WORLD_HEIGHT * GRID_SIZE;
             const bgCtx = backgroundCanvas.getContext('2d');
+            
+            console.log(`🎨 Erstelle Background (${WORLD_WIDTH}x${WORLD_HEIGHT})`);
+            let imagesWorking = 0;
+            let imagesFailed = 0;
             
             // Zeichne jedes Erdfeld mit zufälliger Textur und Rotation
             for (let col = 0; col < WORLD_WIDTH; col++) {
@@ -606,16 +636,57 @@
                     const x = col * GRID_SIZE;
                     const y = row * GRID_SIZE;
                     
-                    bgCtx.save();
-                    bgCtx.translate(x + GRID_SIZE / 2, y + GRID_SIZE / 2);
-                    bgCtx.rotate(rotationSteps * Math.PI / 2); // 90° Schritte
-                    bgCtx.drawImage(earthSprite, -GRID_SIZE / 2, -GRID_SIZE / 2, GRID_SIZE, GRID_SIZE);
-                    bgCtx.restore();
+                    // Prüfe ob Bild geladen ist - WICHTIG für Texturen!
+                    if (earthSprite && earthSprite.complete && earthSprite.naturalWidth > 0) {
+                        // Bild ist geladen - zeichne Textur
+                        bgCtx.save();
+                        bgCtx.translate(x + GRID_SIZE / 2, y + GRID_SIZE / 2);
+                        bgCtx.rotate(rotationSteps * Math.PI / 2); // 90° Schritte
+                        bgCtx.drawImage(earthSprite, -GRID_SIZE / 2, -GRID_SIZE / 2, GRID_SIZE, GRID_SIZE);
+                        bgCtx.restore();
+                        imagesWorking++;
+                    } else {
+                        // Fallback: Zeichne farbiges Rechteck
+                        const brownShade = 70 + (textureIndex * 8); // Variation basierend auf Textur
+                        bgCtx.fillStyle = `rgb(${brownShade}, ${brownShade * 0.6}, ${brownShade * 0.3})`;
+                        bgCtx.fillRect(x, y, GRID_SIZE, GRID_SIZE);
+                        
+                        // Leichte Schattierung für Variation
+                        bgCtx.fillStyle = `rgba(0, 0, 0, ${0.05 + (rotationSteps * 0.02)})`;
+                        bgCtx.fillRect(x, y, GRID_SIZE, GRID_SIZE);
+                        imagesFailed++;
+                    }
                 }
+            }
+            
+            if (imagesFailed > 0) {
+                console.warn(`⚠️ ${imagesFailed} Erdfelder ohne Textur (Fallback verwendet)`);
+                console.log(`💡 Bilder noch nicht geladen - warte einen Moment und starte neu`);
+            } else {
+                console.log(`✅ Alle ${imagesWorking} Texturen erfolgreich gezeichnet!`);
             }
         }
         
         function drawWalls() {
+            // Bei Custom Levels: Zeichne nur Wände aus dem Level-JSON
+            if (usingCustomLevels) {
+                // Zeichne Wände aus walls Array
+                walls.forEach(wall => {
+                    const x = wall.gridX * GRID_SIZE - camera.x;
+                    const y = wall.gridY * GRID_SIZE - camera.y;
+                    
+                    if (x + GRID_SIZE >= 0 && x < canvas.width && y + GRID_SIZE >= 0 && y < canvas.height) {
+                        ctx.fillStyle = '#2a2a2a';
+                        ctx.strokeStyle = '#1a1a1a';
+                        ctx.lineWidth = 2;
+                        ctx.fillRect(x, y, GRID_SIZE, GRID_SIZE);
+                        ctx.strokeRect(x, y, GRID_SIZE, GRID_SIZE);
+                    }
+                });
+                return;
+            }
+            
+            // Bei prozeduralen Levels: Zeichne harte-codierte Rahmen
             ctx.fillStyle = '#2a2a2a';
             ctx.strokeStyle = '#1a1a1a';
             ctx.lineWidth = 2;
@@ -623,6 +694,7 @@
             const gridCols = WORLD_WIDTH;
             const gridRows = WORLD_HEIGHT;
             
+            // Oben
             for (let col = 0; col < gridCols; col++) {
                 for (let row = 0; row <= 4; row++) {
                     const x = col * GRID_SIZE - camera.x;
@@ -635,6 +707,7 @@
                 }
             }
             
+            // Unten
             for (let col = 0; col < gridCols; col++) {
                 for (let row = gridRows - 3; row < gridRows; row++) {
                     const x = col * GRID_SIZE - camera.x;
@@ -647,6 +720,7 @@
                 }
             }
             
+            // Links
             for (let row = 0; row < gridRows; row++) {
                 for (let col = 0; col <= 1; col++) {
                     const x = col * GRID_SIZE - camera.x;
@@ -659,6 +733,7 @@
                 }
             }
             
+            // Rechts
             for (let row = 0; row < gridRows; row++) {
                 for (let col = gridCols - 2; col < gridCols; col++) {
                     const x = col * GRID_SIZE - camera.x;
@@ -673,6 +748,12 @@
         }
         
         function isInWall(gridX, gridY) {
+            // Bei Custom Levels: Prüfe gegen walls Array
+            if (usingCustomLevels) {
+                return false; // Custom Levels haben keine harten Grenzen, nur tiles
+            }
+            
+            // Bei prozeduralen Levels: Harte Grenzen
             if (gridY <= 4 || gridY >= WORLD_HEIGHT - 3) return true;
             if (gridX <= 1 || gridX >= WORLD_WIDTH - 2) return true;
             return false;
@@ -696,6 +777,18 @@
                     }
                 }
             }
+        }
+        
+
+        // Helper-Funktion für Exit-Koordinaten (unterstützt beide Formate)
+        function getExitX() {
+            if (!exitPosition) return null;
+            return exitPosition.gridX !== undefined ? exitPosition.gridX : exitPosition.x;
+        }
+        
+        function getExitY() {
+            if (!exitPosition) return null;
+            return exitPosition.gridY !== undefined ? exitPosition.gridY : exitPosition.y;
         }
         
         function drawTunnel() {
@@ -736,7 +829,7 @@
                     y = Math.floor(Math.random() * (WORLD_HEIGHT - 8)) + 5;
                     attempts++;
                 } while ((isInWall(x, y) || isNearPlayer(x, y, 3) || isWallAt(x, y) ||
-                         (exitPosition && exitPosition.gridX === x && exitPosition.gridY === y)) && 
+                         (exitPosition && getExitX() === x && getExitY() === y)) && 
                          attempts < 100);
                 
                 if (attempts < 100) {
@@ -769,7 +862,7 @@
                     attempts++;
                 } while ((isInWall(x, y) || isNearPlayer(x, y, 4) || 
                          isObstacleAt(x, y) ||
-                         (exitPosition && exitPosition.gridX === x && exitPosition.gridY === y)) && 
+                         (exitPosition && getExitX() === x && getExitY() === y)) && 
                          attempts < 100);
                 
                 if (attempts < 100) {
@@ -955,7 +1048,7 @@
                     const hitsDiamond = diamonds.some(d =>
                         d.gridX === obstacle.gridX && d.gridY === belowGridY && !d.collected
                     );
-                    const hitsExit = exitPosition && exitPosition.gridX === obstacle.gridX && exitPosition.gridY === belowGridY;
+                    const hitsExit = exitPosition && getExitX() === obstacle.gridX && getExitY() === belowGridY;
                     
                     if (hitsGround || hitsBoundary || hitsWall || hitsObstacle || hitsDiamond || hitsExit) {
                         // Stein stoppt - Zustand ändert sich zu "nicht fallend"
@@ -1009,7 +1102,7 @@
                     );
                     const hasPlayerBelow = (obstacle.gridX === playerGridX && belowGridY === playerGridY);
                     const hasWallBelow = isWallAt(obstacle.gridX, belowGridY);
-                    const hasExitBelow = exitPosition && exitPosition.gridX === obstacle.gridX && exitPosition.gridY === belowGridY;
+                    const hasExitBelow = exitPosition && getExitX() === obstacle.gridX && getExitY() === belowGridY;
                     
                     const isEmpty = (tunnel.has(belowKey) || freeFields.has(belowKey)) && 
                                     !hasObstacleBelow && !hasDiamondBelow && !hasPlayerBelow && !hasWallBelow && !hasExitBelow &&
@@ -1048,7 +1141,7 @@
                             const sideHasObstacle = obstacles.some(o => o.gridX === sideX && o.gridY === sideY);
                             const sideHasDiamond = diamonds.some(d => d.gridX === sideX && d.gridY === sideY && !d.collected);
                             const sideHasPlayer = (sideX === playerGridX && sideY === playerGridY);
-                            const sideHasExit = exitPosition && exitPosition.gridX === sideX && exitPosition.gridY === sideY;
+                            const sideHasExit = exitPosition && getExitX() === sideX && getExitY() === sideY;
                             const sideIsFree = (tunnel.has(sideKey) || freeFields.has(sideKey)) && 
                                                !sideHasObstacle && !sideHasDiamond && !sideHasPlayer && !sideHasExit;
                             
@@ -1056,7 +1149,7 @@
                             const diagHasObstacle = obstacles.some(o => o.gridX === sideX && o.gridY === sideBelowY);
                             const diagHasDiamond = diamonds.some(d => d.gridX === sideX && d.gridY === sideBelowY && !d.collected);
                             const diagHasPlayer = (sideX === playerGridX && sideBelowY === playerGridY);
-                            const diagHasExit = exitPosition && exitPosition.gridX === sideX && exitPosition.gridY === sideBelowY;
+                            const diagHasExit = exitPosition && getExitX() === sideX && getExitY() === sideBelowY;
                             const diagIsFree = (tunnel.has(sideBelowKey) || freeFields.has(sideBelowKey)) && 
                                                !diagHasObstacle && !diagHasDiamond && !diagHasPlayer && !diagHasExit;
                             
@@ -1090,7 +1183,7 @@
                 } while ((isInWall(x, y) || isWallAt(x, y) || isNearPlayer(x, y, 4) || 
                          obstacles.some(o => o.gridX === x && o.gridY === y) ||
                          freeFields.has(`${x},${y}`) ||
-                         (exitPosition && exitPosition.gridX === x && exitPosition.gridY === y)) && 
+                         (exitPosition && getExitX() === x && getExitY() === y)) && 
                          attempts < 100);
                 
                 if (attempts < 100) {
@@ -1164,7 +1257,7 @@
                     const hitsDiamond = diamonds.some(d =>
                         d !== diamond && d.gridX === diamond.gridX && d.gridY === belowGridY && !d.collected
                     );
-                    const hitsExit = exitPosition && exitPosition.gridX === diamond.gridX && exitPosition.gridY === belowGridY;
+                    const hitsExit = exitPosition && getExitX() === diamond.gridX && getExitY() === belowGridY;
                     
                     if (hitsGround || hitsBoundary || hitsWall || hitsObstacle || hitsDiamond || hitsExit) {
                         // Diamant stoppt - Zustand ändert sich zu "nicht fallend"
@@ -1218,7 +1311,7 @@
                     );
                     const hasPlayerBelow = (diamond.gridX === playerGridX && belowGridY === playerGridY);
                     const hasWallBelow = isWallAt(diamond.gridX, belowGridY);
-                    const hasExitBelow = exitPosition && exitPosition.gridX === diamond.gridX && exitPosition.gridY === belowGridY;
+                    const hasExitBelow = exitPosition && getExitX() === diamond.gridX && getExitY() === belowGridY;
                     
                     const isEmpty = (tunnel.has(belowKey) || freeFields.has(belowKey)) && 
                                     !hasObstacleBelow && !hasDiamondBelow && !hasPlayerBelow && !hasWallBelow && !hasExitBelow &&
@@ -1257,7 +1350,7 @@
                             const sideHasObstacle = obstacles.some(o => o.gridX === sideX && o.gridY === sideY);
                             const sideHasDiamond = diamonds.some(d => d.gridX === sideX && d.gridY === sideY && !d.collected);
                             const sideHasPlayer = (sideX === playerGridX && sideY === playerGridY);
-                            const sideHasExit = exitPosition && exitPosition.gridX === sideX && exitPosition.gridY === sideY;
+                            const sideHasExit = exitPosition && getExitX() === sideX && getExitY() === sideY;
                             const sideIsFree = (tunnel.has(sideKey) || freeFields.has(sideKey)) && 
                                                !sideHasObstacle && !sideHasDiamond && !sideHasPlayer && !sideHasExit;
                             
@@ -1265,7 +1358,7 @@
                             const diagHasObstacle = obstacles.some(o => o.gridX === sideX && o.gridY === sideBelowY);
                             const diagHasDiamond = diamonds.some(d => d.gridX === sideX && d.gridY === sideBelowY && !d.collected);
                             const diagHasPlayer = (sideX === playerGridX && sideBelowY === playerGridY);
-                            const diagHasExit = exitPosition && exitPosition.gridX === sideX && exitPosition.gridY === sideBelowY;
+                            const diagHasExit = exitPosition && getExitX() === sideX && getExitY() === sideBelowY;
                             const diagIsFree = (tunnel.has(sideBelowKey) || freeFields.has(sideBelowKey)) && 
                                                !diagHasObstacle && !diagHasDiamond && !diagHasPlayer && !diagHasExit;
                             
@@ -1303,7 +1396,7 @@
                          diamonds.some(d => d.gridX === x && d.gridY === y && !d.collected) ||
                          monsters.some(m => m.gridX === x && m.gridY === y) || // Kein anderes Monster auf diesem Feld!
                          !(tunnel.has(`${x},${y}`) || freeFields.has(`${x},${y}`)) || // Nur auf Leerfeldern!
-                         (exitPosition && exitPosition.gridX === x && exitPosition.gridY === y)) && 
+                         (exitPosition && getExitX() === x && getExitY() === y)) && 
                          attempts < 100);
                 
                 if (attempts < 100) {
@@ -1354,7 +1447,7 @@
                         if (nx >= 0 && nx < WORLD_WIDTH && ny >= 0 && ny < WORLD_HEIGHT &&
                             !isWallAt(nx, ny)) {
                             
-                            const hasExit = exitPosition && exitPosition.gridX === nx && exitPosition.gridY === ny;
+                            const hasExit = exitPosition && getExitX() === nx && getExitY() === ny;
                             
                             if (!hasExit) {
                                 // Mache zu Leerfeld
@@ -1419,7 +1512,7 @@
                         if (isEmptyField || isEarthField) {
                             const hasDiamond = diamonds.some(d => d.gridX === nx && d.gridY === ny && !d.collected);
                             const hasObstacle = obstacles.some(o => o.gridX === nx && o.gridY === ny);
-                            const hasExit = exitPosition && exitPosition.gridX === nx && exitPosition.gridY === ny;
+                            const hasExit = exitPosition && getExitX() === nx && getExitY() === ny;
                             
                             if (!hasDiamond && !hasObstacle && !hasExit) {
                                 newDiamonds.push({
@@ -1582,12 +1675,21 @@
         function drawExit() {
             if (!exitPosition) return;
             
-            const x = exitPosition.gridX * GRID_SIZE - camera.x;
-            const y = exitPosition.gridY * GRID_SIZE - camera.y;
+            // Unterstütze beide Formate: {x, y} aus JSON und {gridX, gridY} aus prozeduraler Generierung
+            const gridX = getExitX() !== undefined ? getExitX() : exitPosition.x;
+            const gridY = getExitY() !== undefined ? getExitY() : exitPosition.y;
+            
+            if (gridX === undefined || gridY === undefined) {
+                console.error('❌ Exit Position ungültig:', exitPosition);
+                return;
+            }
+            
+            const x = gridX * GRID_SIZE - camera.x;
+            const y = gridY * GRID_SIZE - camera.y;
             
             if (x + GRID_SIZE >= 0 && x < canvas.width && y + GRID_SIZE >= 0 && y < canvas.height) {
                 // Mache das Feld unter der Tür leer
-                const exitPos = `${exitPosition.gridX},${exitPosition.gridY}`;
+                const exitPos = `${gridX},${gridY}`;
                 if (!tunnel.has(exitPos) && !freeFields.has(exitPos)) {
                     tunnel.add(exitPos);
                 }
@@ -1888,7 +1990,7 @@
                                     d.gridX === behindStoneX && d.gridY === behindStoneY && !d.collected
                                 );
                                 const hasWallBehind = isWallAt(behindStoneX, behindStoneY);
-                                const hasExitBehind = exitPosition && exitPosition.gridX === behindStoneX && exitPosition.gridY === behindStoneY;
+                                const hasExitBehind = exitPosition && getExitX() === behindStoneX && getExitY() === behindStoneY;
                                 const hasMonsterBehind = monsters.some(m => 
                                     !m.dead && m.gridX === behindStoneX && m.gridY === behindStoneY
                                 );
@@ -1933,7 +2035,7 @@
                             // Prüfe ob es ein Erdfeld ist (nicht bereits Tunnel oder freies Feld)
                             if (!tunnel.has(targetPos) && !freeFields.has(targetPos)) {
                                 // Prüfe ob keine Tür dort ist
-                                const hasExit = exitPosition && exitPosition.gridX === targetX && exitPosition.gridY === targetY;
+                                const hasExit = exitPosition && getExitX() === targetX && getExitY() === targetY;
                                 
                                 if (!hasExit) {
                                     // Grabe das Erdfeld aus
@@ -1968,10 +2070,80 @@
                     
                     // Prüfe ob Tür im Weg ist (geschlossene Tür blockiert)
                     const hasClosedExit = exitPosition && !exitOpen && 
-                                         exitPosition.gridX === newGridX && exitPosition.gridY === newGridY;
+                                         getExitX() === newGridX && getExitY() === newGridY;
                     
                     if (hasClosedExit) {
                         return; // Kann nicht durch geschlossene Tür
+        
+        function drawExit() {
+            if (!exitPosition) return;
+            
+            // Unterstütze beide Formate: {x, y} aus JSON und {gridX, gridY} aus prozeduraler Generierung
+            const gridX = getExitX() !== undefined ? getExitX() : exitPosition.x;
+            const gridY = getExitY() !== undefined ? getExitY() : exitPosition.y;
+            
+            if (gridX === undefined || gridY === undefined) {
+                console.error('❌ Exit Position ungültig:', exitPosition);
+                return;
+            }
+            
+            const x = gridX * GRID_SIZE - camera.x;
+            const y = gridY * GRID_SIZE - camera.y;
+            
+            if (x + GRID_SIZE >= 0 && x < canvas.width && y + GRID_SIZE >= 0 && y < canvas.height) {
+                // Mache das Feld unter der Tür leer
+                const exitPos = `${gridX},${gridY}`;
+                if (!tunnel.has(exitPos) && !freeFields.has(exitPos)) {
+                    tunnel.add(exitPos);
+                }
+                
+                if (exitOpen) {
+                    // Offene Tür (grün, glühend)
+                    ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+                    ctx.fillRect(x, y, GRID_SIZE, GRID_SIZE);
+                    
+                    ctx.fillStyle = '#00FF00';
+                    ctx.strokeStyle = '#00AA00';
+                    ctx.lineWidth = 4;
+                    
+                    // Tür-Rahmen
+                    ctx.strokeRect(x + 10, y + 5, GRID_SIZE - 20, GRID_SIZE - 10);
+                    
+                    // Glüheffekt
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = '#00FF00';
+                    ctx.fillRect(x + 12, y + 7, GRID_SIZE - 24, GRID_SIZE - 14);
+                    ctx.shadowBlur = 0;
+                    
+                    // "EXIT" Text
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = 'bold 20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('EXIT', x + GRID_SIZE / 2, y + GRID_SIZE / 2);
+                } else {
+                    // Geschlossene Tür (rot/grau)
+                    ctx.fillStyle = 'rgba(128, 128, 128, 0.5)';
+                    ctx.fillRect(x, y, GRID_SIZE, GRID_SIZE);
+                    
+                    ctx.fillStyle = '#888888';
+                    ctx.strokeStyle = '#555555';
+                    ctx.lineWidth = 4;
+                    
+                    // Tür-Rahmen
+                    ctx.strokeRect(x + 10, y + 5, GRID_SIZE - 20, GRID_SIZE - 10);
+                    ctx.fillRect(x + 12, y + 7, GRID_SIZE - 24, GRID_SIZE - 14);
+                    
+                    // Schloss-Symbol
+                    ctx.fillStyle = '#FF0000';
+                    ctx.beginPath();
+                    ctx.arc(x + GRID_SIZE / 2, y + GRID_SIZE / 2 - 5, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillRect(x + GRID_SIZE / 2 - 5, y + GRID_SIZE / 2 - 5, 10, 15);
+                }
+            }
+        }
+        
                     }
                     
                     const newX = player.x + dx * GRID_SIZE;
@@ -2007,7 +2179,7 @@
                     }
                     
                     if (exitOpen && exitPosition && 
-                        newGridX === exitPosition.gridX && newGridY === exitPosition.gridY) {
+                        newGridX === getExitX() && newGridY === getExitY()) {
                         nextLevel();
                     }
                     
@@ -2018,23 +2190,6 @@
         }
         
         function drawGameOver() {
-            // Prüfe ob das ein neuer Highscore ist (nur einmal)
-            if (!window.gameOverHighscoreChecked) {
-                window.gameOverHighscoreChecked = true;
-                
-                // Aktualisiere finalStats mit aktuellen Daten
-                finalStats.totalDiamondsCollected = totalDiamondsCollectedAllTime;
-                finalStats.totalLevelsCompleted = currentLevel - 1; // Level wo gestorben
-                finalStats.totalDistanceTraveled = Math.floor(totalDistance / 10);
-                
-                // Prüfe Highscore
-                if (checkHighscore()) {
-                    setTimeout(() => {
-                        showNameInput();
-                    }, 2000);
-                }
-            }
-            
             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
@@ -2073,32 +2228,18 @@
             
             const buttonWidth = 200;
             const buttonHeight = 60;
-            const buttonSpacing = 20;
-            const button1X = canvas.width / 2 - buttonWidth - buttonSpacing / 2;
-            const button2X = canvas.width / 2 + buttonSpacing / 2;
+            const buttonX = canvas.width / 2 - buttonWidth / 2;
             const buttonY = canvas.height / 2 + 150;
             
-            // Neustart Button
             ctx.fillStyle = '#4CAF50';
-            ctx.fillRect(button1X, buttonY, buttonWidth, buttonHeight);
+            ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
             ctx.strokeStyle = '#2E7D32';
             ctx.lineWidth = 4;
-            ctx.strokeRect(button1X, buttonY, buttonWidth, buttonHeight);
+            ctx.strokeRect(buttonX, buttonY, buttonWidth, buttonHeight);
             
             ctx.fillStyle = '#FFF';
-            ctx.font = 'bold 24px Arial';
-            ctx.fillText('🔄 NEUSTART', button1X + buttonWidth / 2, buttonY + buttonHeight / 2 + 8);
-            
-            // Menü Button
-            ctx.fillStyle = '#FF9800';
-            ctx.fillRect(button2X, buttonY, buttonWidth, buttonHeight);
-            ctx.strokeStyle = '#E65100';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(button2X, buttonY, buttonWidth, buttonHeight);
-            
-            ctx.fillStyle = '#FFF';
-            ctx.font = 'bold 24px Arial';
-            ctx.fillText('🏠 MENÜ', button2X + buttonWidth / 2, buttonY + buttonHeight / 2 + 8);
+            ctx.font = 'bold 28px Arial';
+            ctx.fillText('HAUPTMENÜ', canvas.width / 2, buttonY + buttonHeight / 2);
         }
         
         document.addEventListener('keydown', (e) => {
@@ -2123,22 +2264,17 @@
                 
                 const buttonWidth = 200;
                 const buttonHeight = 60;
-                const buttonSpacing = 20;
-                const button1X = canvas.width / 2 - buttonWidth - buttonSpacing / 2;
-                const button2X = canvas.width / 2 + buttonSpacing / 2;
-                const buttonY = canvas.height / 2 + 150;
+                const buttonX = canvas.width / 2 - buttonWidth / 2;
+                const buttonY = canvas.height / 2 + 140;
                 
-                // Neustart Button
-                if (clickX >= button1X && clickX <= button1X + buttonWidth &&
+                if (clickX >= buttonX && clickX <= buttonX + buttonWidth &&
                     clickY >= buttonY && clickY <= buttonY + buttonHeight) {
-                    resetGame();
-                }
-                
-                // Menü Button
-                if (clickX >= button2X && clickX <= button2X + buttonWidth &&
-                    clickY >= buttonY && clickY <= buttonY + buttonHeight) {
+                    // Zurück zum Hauptmenü
                     gameOver = false;
-                    showMenu();
+                    highscoreChecked = false;  // Reset für nächstes Spiel
+                    currentLevel = 1;
+                    totalDiamondsCollectedAllTime = 0;
+                    showMenu();  // Zeige Menü an!
                 }
             }
         });
@@ -2194,7 +2330,6 @@
         }
         
         function resetGame() {
-            window.gameOverHighscoreChecked = false; // Reset für nächstes Game Over
             currentLevel = 1;
             levelDisplay.textContent = '1';
             player.x = Math.floor(WORLD_WIDTH / 2) * GRID_SIZE + GRID_SIZE / 2;
@@ -2232,7 +2367,7 @@
         }
         
         function gameLoop(currentTime) {
-            // Nur ausführen wenn Spiel gestartet wurde
+            // Wenn nicht im Spiel, nur weiter loopen aber nichts rendern/updaten
             if (!gameStarted) {
                 requestAnimationFrame(gameLoop);
                 return;
@@ -2301,29 +2436,61 @@
             }
             
             if (gameOver) {
+                // Prüfe Highscore nur einmal
+                if (!highscoreChecked) {
+                    highscoreChecked = true;
+                    
+                    // Update finalStats mit aktuellen Werten
+                    finalStats.totalDiamondsCollected = totalDiamondsCollectedAllTime;
+                    finalStats.totalLevelsCompleted = currentLevel;
+                    finalStats.totalDistanceTraveled = totalDistance;
+                    
+                    // Prüfe ob Highscore erreicht wurde
+                    if (checkHighscore()) {
+                        console.log('🏆 HIGHSCORE erreicht!');
+                        showNameInput();
+                    } else {
+                        console.log('📊 Kein Highscore');
+                    }
+                }
+                
                 drawGameOver();
             }
             
             requestAnimationFrame(gameLoop);
         }
         
-        // ==========================================
-        // INITIALISIERUNG
-        // ==========================================
-        
         createStaticBackground();
+        generateFreeFields();
+        generateObstacles();
+        generateWalls(); // Generiere Mauern
+        generateDiamonds();
+        generateMonsters();
+        generateExit();
+        const gridX = Math.floor((player.x - GRID_SIZE / 2) / GRID_SIZE);
+        const gridY = Math.floor((player.y - GRID_SIZE / 2) / GRID_SIZE);
+        tunnel.add(`${gridX},${gridY}`);
+        
+        diamondsDisplay.textContent = diamondsCollected;
+        totalDiamondsNeededDisplay.textContent = totalDiamonds;
+        totalCollectedDisplay.textContent = totalDiamondsCollectedAllTime;
+        
+        // Initialisiere Timer
+        timeRemaining = getTimeForLevel(currentLevel);
+        timerDisplay.textContent = timeRemaining;
+        lastTimerUpdate = performance.now();
+        player.lastMoveTime = performance.now(); // Initialisiere Spieler-Timer
+        
         updateCamera();
         
         // Lade Highscores beim Start
         loadHighscores();
         displayHighscores();
         
-        // Starte Game Loop (läuft auch im Menü für Rendering)
-        requestAnimationFrame(gameLoop);
-        
-        // Setze Menü-Hintergrund (lädt von GitHub)
+        // Setze Menü-Hintergrund (Bild muss im gleichen Verzeichnis liegen)
         const menuScreen = document.getElementById('menuScreen');
-        menuScreen.style.backgroundImage = 'url(https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/refs/heads/main/img/Menu.png)';
+        // Verwende das hochgeladene Bild
+        menuScreen.style.backgroundImage = 'url(Menu.png)';
         
         // ========== MENU & HIGHSCORE SYSTEM ==========
         
@@ -2387,7 +2554,17 @@
             // Lade Custom Level
             const levelData = customLevels[levelNumber - 1];
             if (!levelData) {
-                console.error('Level nicht gefunden:', levelNumber);
+                console.error('❌ Level nicht gefunden:', levelNumber);
+                console.log('📊 Verfügbare Level:', customLevels.length);
+                console.log('📋 Level Array:', customLevels);
+                
+                // Wenn kein weiteres Level existiert, zeige Completion Screen
+                if (levelNumber > customLevels.length) {
+                    console.log('🎉 Alle Level abgeschlossen!');
+                    showCompletionScreen();
+                } else {
+                    alert(`Fehler: Level ${levelNumber} konnte nicht geladen werden!`);
+                }
                 return;
             }
             
@@ -2428,11 +2605,32 @@
                 gridY: pos.y,
                 falling: false,
                 fallDelay: 0,
+                fallDelayTime: 300,  // Verzögerung bevor Fallen startet
                 lastFallTime: 0,
+                fallSpeed: 100,  // Geschwindigkeit beim Fallen
                 rotation: 0,
                 rotationSpeed: 0,
                 spriteIndex: Math.floor(Math.random() * 13)
             }));
+            
+            // Wichtig: Felder unter Steinen zu tunnel hinzufügen damit Steine fallen können!
+            obstacles.forEach(stone => {
+                const stoneKey = `${stone.gridX},${stone.gridY}`;
+                const belowKey = `${stone.gridX},${stone.gridY + 1}`;
+                
+                // Stein-Feld selbst sollte leer sein
+                if (!tunnel.has(stoneKey)) {
+                    tunnel.add(stoneKey);
+                }
+                
+                // Prüfe Feld darunter - wenn in tiles 'empty', dann zu tunnel
+                if (stone.gridY + 1 < WORLD_HEIGHT) {
+                    const belowTile = levelData.tiles[stone.gridY + 1]?.[stone.gridX];
+                    if (belowTile === 'empty') {
+                        tunnel.add(belowKey);
+                    }
+                }
+            });
             
             diamonds = levelData.objects.diamonds.map(pos => ({
                 gridX: pos.x,
@@ -2493,6 +2691,15 @@
             createStaticBackground();
         }
         
+        function resetGameStats() {
+            finalStats.totalDiamondsCollected = 0;
+            finalStats.totalLevelsCompleted = 0;
+            finalStats.totalDistanceTraveled = 0;
+            finalStats.totalTimePlayed = 0;
+            totalDiamondsCollectedAllTime = 0;
+            distanceTraveled = 0;
+        }
+        
         function showCompletionScreen() {
             gameCompleted = true;
             gameStarted = false;
@@ -2544,35 +2751,11 @@
             if (saved) {
                 try {
                     highscores = JSON.parse(saved);
-                    
-                    // Migration: Entferne Einträge ohne Namen (alte Version)
-                    highscores = highscores.filter(entry => entry.name && entry.name.trim() !== '');
-                    
-                    // Wenn nach Migration leer, füge Beispiel-Daten hinzu
-                    if (highscores.length === 0) {
-                        highscores = [
-                            { name: "Tunnel-Meister", diamonds: 150, level: 10, time: 450, distance: 1200 },
-                            { name: "Grabe-König", diamonds: 120, level: 8, time: 380, distance: 1050 },
-                            { name: "Diamant-Jäger", diamonds: 95, level: 6, time: 320, distance: 890 },
-                            { name: "Stein-Brecher", diamonds: 75, level: 5, time: 280, distance: 720 },
-                            { name: "Tunnel-Held", diamonds: 60, level: 4, time: 240, distance: 650 }
-                        ];
-                        localStorage.setItem('tunnel_game_highscores', JSON.stringify(highscores));
-                    }
                 } catch(e) {
                     highscores = [];
                 }
             } else {
-                // Erstmalige Initialisierung mit Beispiel-Highscores
-                highscores = [
-                    { name: "Tunnel-Meister", diamonds: 150, level: 10, time: 450, distance: 1200 },
-                    { name: "Grabe-König", diamonds: 120, level: 8, time: 380, distance: 1050 },
-                    { name: "Diamant-Jäger", diamonds: 95, level: 6, time: 320, distance: 890 },
-                    { name: "Stein-Brecher", diamonds: 75, level: 5, time: 280, distance: 720 },
-                    { name: "Tunnel-Held", diamonds: 60, level: 4, time: 240, distance: 650 }
-                ];
-                // Speichere Beispiel-Highscores sofort
-                localStorage.setItem('tunnel_game_highscores', JSON.stringify(highscores));
+                highscores = [];
             }
             sortHighscores();
         }
@@ -2593,37 +2776,30 @@
         
         function displayHighscores() {
             const list = document.getElementById('highscoreList');
-            if (!list) {
-                console.error('Highscore-Liste Element nicht gefunden!');
-                return;
-            }
+            if (!list) return;
             
-            console.log('Displaying highscores:', highscores);
+            console.log('📊 Display Highscores:', highscores.length, 'Einträge');
+            highscores.forEach((entry, i) => {
+                console.log(`  ${i+1}. Name: "${entry.name}", 💎${entry.diamonds}, Level ${entry.level}`);
+            });
             
             if (highscores.length === 0) {
                 list.innerHTML = '<div style="text-align: center; color: #888; padding: 50px;">Noch keine Einträge</div>';
                 return;
             }
             
-            list.innerHTML = highscores.map((entry, index) => {
-                // Debug: Prüfe ob Name vorhanden
-                if (!entry.name) {
-                    console.warn('Eintrag ohne Namen:', entry);
-                }
-                
-                return `
+            list.innerHTML = highscores.map((entry, index) => `
                 <div class="highscore-entry ${index === 0 ? 'rank-1' : ''}">
                     <div class="highscore-row">
                         <div class="rank">${index + 1}</div>
-                        <div class="player-name">${entry.name || '???'}</div>
+                        <div class="player-name">${entry.name || 'Unbekannt'}</div>
                         <div class="score-value">${entry.diamonds}</div>
                         <div class="score-value">${entry.level}</div>
                         <div class="score-value">${Math.round(entry.time)}s</div>
                         <div class="score-value">${Math.round(entry.distance)}m</div>
                     </div>
                 </div>
-            `;
-            }).join('');
+            `).join('');
         }
         
         function checkHighscore() {
@@ -2660,16 +2836,30 @@
         }
         
         function saveHighscore() {
-            const name = document.getElementById('playerNameInput').value.trim();
+            let name = document.getElementById('playerNameInput').value.trim();
+            console.log('💾 Save Highscore - Name eingegeben:', name);
+            
             if (!name) {
                 alert('Bitte gib einen Namen ein!');
                 return;
             }
             
-            highscores.push({
+            // Begrenze Name auf 15 Zeichen
+            if (name.length > 15) {
+                name = name.substring(0, 15);
+                console.log('✂️ Name gekürzt auf:', name);
+            }
+            
+            console.log('📊 currentPlayerStats:', currentPlayerStats);
+            
+            const newEntry = {
                 name: name,
                 ...currentPlayerStats
-            });
+            };
+            
+            console.log('✅ Neuer Highscore-Eintrag:', newEntry);
+            
+            highscores.push(newEntry);
             
             sortHighscores();
             saveHighscores();
@@ -2685,22 +2875,14 @@
             }
         });
         
-        function resetGameStats() {
-            finalStats = {
-                totalDiamondsCollected: 0,
-                totalLevelsCompleted: 0,
-                totalDistanceTraveled: 0,
-                totalTimePlayed: 0
-            };
-            totalDiamondsCollectedAllTime = 0;
-            totalDistance = 0;
-            lastFrameTime = performance.now();
-            window.gameOverHighscoreChecked = false;
-        }
-        
         function showMenu() {
             document.getElementById('menuScreen').classList.add('active');
             gameStarted = false;
+            gameOver = false;  // Reset Game Over
+            highscoreChecked = false;  // Reset Highscore Check
+            
+            // Schließe Name-Input Modal falls offen
+            document.getElementById('nameInputModal').classList.remove('active');
         }
         
         function hideMenu() {
@@ -2708,113 +2890,35 @@
             gameStarted = true;
         }
         
-        function openLevelEditor() {
-            window.open('level_editor.html', '_blank');
-        }
-        
-        async function startGame() {
+        function startGame() {
+            console.log('🎮 START GAME');
             hideMenu();
             resetGameStats();
             currentLevel = 1;
+            gameOver = false;  // Reset Game Over Zustand
+            highscoreChecked = false;  // Reset Highscore Check
             
-            // Warte bis Level geladen ist
-            await loadLevelByNumber(1);
+            // Level 1 ist bereits in customLevels[0] eingebettet!
+            console.log('📦 Level vorhanden:', customLevels[0] ? 'JA' : 'NEIN');
+            
+            if (customLevels[0]) {
+                usingCustomLevels = true;
+                loadLevel(1);
+                console.log('✅ Level 1 geladen');
+                console.log('   Spieler:', player.x, player.y);
+                console.log('   Wände:', walls.length);
+                console.log('   Diamanten:', diamonds.length);
+                console.log('   Total benötigt:', totalDiamonds);
+            } else {
+                console.error('❌ Level 1 nicht gefunden!');
+                alert('Fehler: Level 1 fehlt im Code!');
+                showMenu();
+            }
+            
+            requestAnimationFrame(gameLoop);
         }
         
-        function loadLevelByNumber(levelNum) {
-            return new Promise((resolve, reject) => {
-                currentLevel = levelNum;
-                const levelFile = `level_${String(levelNum).padStart(2, '0')}.json`;
-                
-                // Verschiedene URLs zum Ausprobieren
-                const urls = [
-                    // GitHub Raw URL - KORREKT mit refs/heads/main
-                    `https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/refs/heads/main/level/${levelFile}`,
-                    // Fallback: alte URL-Struktur
-                    `https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/main/level/${levelFile}`,
-                    // Fallback: /levels/ (falls umbenannt)
-                    `https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/refs/heads/main/levels/${levelFile}`,
-                    // Direkt im Hauptverzeichnis
-                    `https://raw.githubusercontent.com/ShrekIII/Diamond-Digger/refs/heads/main/${levelFile}`,
-                    // Lokale Dateien (für offline-Nutzung)
-                    levelFile,
-                    `level/${levelFile}`,
-                    `levels/${levelFile}`
-                ];
-                
-                // Versuche alle URLs nacheinander
-                function tryNextUrl(index) {
-                    if (index >= urls.length) {
-                        // Alle URLs fehlgeschlagen - biete manuellen Upload an
-                        if (customLevels.length > 0 && customLevels[levelNum - 1]) {
-                            console.log('Verwende gecachtes Level');
-                            loadLevel(levelNum);
-                            resolve();
-                        } else {
-                            console.error(`Level ${levelNum} nicht gefunden in:`, urls);
-                            
-                            // Frage ob Level manuell hochgeladen werden soll
-                            const upload = confirm(
-                                `❌ Level ${levelNum} konnte nicht automatisch geladen werden!\n\n` +
-                                `Möchtest du die Level-Dateien manuell hochladen?\n\n` +
-                                `(Klicke OK um alle Level auf einmal hochzuladen)`
-                            );
-                            
-                            if (upload) {
-                                loadLevelsManually();
-                                resolve(); // Resolve trotzdem, damit UI nicht hängt
-                            } else {
-                                showMenu();
-                                reject('Level loading cancelled');
-                            }
-                        }
-                        return;
-                    }
-                    
-                    const url = urls[index];
-                    console.log(`Versuche Level ${levelNum} zu laden von: ${url}`);
-                    
-                    fetch(url)
-                        .then(response => {
-                            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                            return response.json();
-                        })
-                        .then(levelData => {
-                            console.log(`✅ Level ${levelNum} erfolgreich geladen von: ${url}`);
-                            customLevels[levelNum - 1] = levelData;
-                            usingCustomLevels = true;
-                            loadLevel(levelNum);
-                            
-                            // Initialisiere UI NACH dem Laden
-                            levelDisplay.textContent = currentLevel;
-                            diamondsDisplay.textContent = diamondsCollected;
-                            totalDiamondsNeededDisplay.textContent = totalDiamonds;
-                            totalCollectedDisplay.textContent = totalDiamondsCollectedAllTime;
-                            distanceDisplay.textContent = '0';
-                            
-                            // Initialisiere Timer
-                            timeRemaining = getTimeForLevel(currentLevel);
-                            timerDisplay.textContent = timeRemaining;
-                            lastTimerUpdate = performance.now();
-                            timerRunning = true;
-                            
-                            // Initialisiere Spieler
-                            player.lastMoveTime = performance.now();
-                            
-                            resolve();
-                        })
-                        .catch(error => {
-                            console.log(`❌ Fehlgeschlagen (${url}):`, error.message);
-                            // Nächste URL versuchen
-                            tryNextUrl(index + 1);
-                        });
-                }
-                
-                tryNextUrl(0);
-            });
-        }
-        
-        function loadLevelsManually() {
+        function loadCustomLevelsFromMenu() {
             const input = document.createElement('input');
             input.type = 'file';
             input.multiple = true;
@@ -2822,12 +2926,8 @@
             
             input.onchange = function(e) {
                 const files = Array.from(e.target.files);
-                if (files.length === 0) {
-                    showMenu();
-                    return;
-                }
+                if (files.length === 0) return;
                 
-                // Sortiere nach Dateinamen
                 files.sort((a, b) => {
                     const numA = parseInt(a.name.match(/\d+/)?.[0] || 0);
                     const numB = parseInt(b.name.match(/\d+/)?.[0] || 0);
@@ -2848,29 +2948,10 @@
                             if (filesLoaded === files.length) {
                                 usingCustomLevels = true;
                                 maxLevel = customLevels.length;
-                                console.log(`✅ ${customLevels.length} Level erfolgreich hochgeladen!`);
-                                
-                                // Verstecke Menü und starte mit Level 1
-                                hideMenu();
-                                resetGameStats();
-                                currentLevel = 1;
-                                loadLevel(1);
-                                
-                                // Initialisiere UI
-                                levelDisplay.textContent = currentLevel;
-                                diamondsDisplay.textContent = diamondsCollected;
-                                totalDiamondsNeededDisplay.textContent = totalDiamonds;
-                                totalCollectedDisplay.textContent = totalDiamondsCollectedAllTime;
-                                distanceDisplay.textContent = '0';
-                                timeRemaining = getTimeForLevel(currentLevel);
-                                timerDisplay.textContent = timeRemaining;
-                                lastTimerUpdate = performance.now();
-                                timerRunning = true;
-                                player.lastMoveTime = performance.now();
+                                alert(`${customLevels.length} Level geladen!`);
                             }
                         } catch (err) {
                             alert(`Fehler beim Laden von ${file.name}: ${err.message}`);
-                            showMenu();
                         }
                     };
                     reader.readAsText(file);
@@ -2878,6 +2959,40 @@
             };
             
             input.click();
+        }
+        
+        function loadLevelByNumber(levelNum) {
+            console.log(`🎮 loadLevelByNumber(${levelNum}) aufgerufen`);
+            currentLevel = levelNum;
+            
+            // ERST prüfen ob Level bereits geladen/eingebettet ist
+            if (customLevels[levelNum - 1]) {
+                console.log(`✅ Level ${levelNum} ist bereits vorhanden (eingebettet/geladen)`);
+                usingCustomLevels = true;
+                loadLevel(levelNum);
+                return;
+            }
+            
+            // Versuche Level-Datei zu laden
+            const levelFile = `level_${String(levelNum).padStart(2, '0')}.json`;
+            console.log(`📁 Versuche ${levelFile} zu laden...`);
+            
+            fetch(levelFile)
+                .then(response => {
+                    if (!response.ok) throw new Error('Level nicht gefunden');
+                    return response.json();
+                })
+                .then(levelData => {
+                    console.log(`✅ Level ${levelNum} von Datei geladen`);
+                    customLevels[levelNum - 1] = levelData;
+                    usingCustomLevels = true;
+                    loadLevel(levelNum);
+                })
+                .catch(error => {
+                    console.error(`❌ Fehler beim Laden: ${error.message}`);
+                    alert(`Level ${levelNum} nicht gefunden! Bitte lade Level-Dateien über das Menü.`);
+                    showMenu();
+                });
         }
     </script>
 </body>
